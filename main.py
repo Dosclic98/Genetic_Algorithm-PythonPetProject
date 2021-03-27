@@ -14,11 +14,11 @@ class Point:
         circle((self.x, self.y), self.rad)
 
 class BlindFinder:
-    def __init__(self, x, y, rad, stepX = 5, stepY = 5, moves = list()):
+    def __init__(self, x, y, rad, stepX = 5, stepY = 5):
         self.x = x
         self.y = y
         self.rad = rad
-        self.moves = moves
+        self.moves = list()
         self.stepX = stepX
         self.stepY = stepY
         self.moveToDo = 0
@@ -29,8 +29,8 @@ class BlindFinder:
         self.x += xShift
         self.y += yShift
 
-        self.moves.append((-1, 2))
-        print("Add: " + str((xShift, yShift)) + " in " + str(self))
+        self.moves.append((xShift, yShift))
+        #print("Add: " + str((-1, -2)) + " in " + str(int(id(self.moves))))
 
     def move(self):
         self.x = self.x + self.moves[self.moveToDo][0]
@@ -46,8 +46,8 @@ SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 BORDER_WIDTH = 20
 BORDER_COLOR = Color(255,0,0)
-NUM_FINDERS = 10
-MOVES_PER_GEN = 5
+NUM_FINDERS = 25
+MOVES_PER_GEN = 300
 K_BEST = 5
 
 numMoves = 0
@@ -113,7 +113,7 @@ def genMoveAllFinders():
     for finder in bFinders:
         finder.genMove()
         finder.draw()
-    print(" ")
+    #print(" ")
 
 def moveAllFinders():
     for finder in bFinders:
@@ -133,12 +133,27 @@ def crossover(bestFinders):
         finderA = bestFinders[firstIndex].get("finder")
         finderB = bestFinders[secondIndex].get("finder")
         listNewFinders.append(BlindFinder(START[0], START[1], 10))
+        finderOp = listNewFinders[len(listNewFinders)-1]
+#        for i in range(0, len(finderA.moves)):
+#            ch = random.randint(0,1)
+#            if ch == 0:
+#                listNewFinders[len(listNewFinders)-1].moves.append(finderA.moves[i])
+#            else:
+#                listNewFinders[len(listNewFinders)-1].moves.append(finderB.moves[i])
         for i in range(0, len(finderA.moves)):
-            ch = random.randint(0,1)
-            if ch == 0:
-                listNewFinders[len(listNewFinders)-1].moves.append(finderA.moves[i])
-            else:
-                listNewFinders[len(listNewFinders)-1].moves.append(finderB.moves[i])
+            wh = random.uniform(0, 1)
+            xOff = ((finderA.moves[i][0] * wh) + (finderB.moves[i][0] * (1 - wh)))
+            yOff = ((finderA.moves[i][1] * wh) + (finderB.moves[i][1] * (1 - wh)))
+            finderOp.moves.append((xOff, yOff))   
+        mutProb = 0.2
+        lstMvs = list()
+        for mv in finderOp.moves:
+            prob = random.uniform(0, 1)
+            newMv = mv
+            if(prob < mutProb):
+                newMv = (random.randint(-finderOp.stepX, finderOp.stepX), random.randint(-finderOp.stepY, finderOp.stepY))
+            lstMvs.append(newMv)
+        finderOp.moves = lstMvs
     return listNewFinders
 
 def fitnessFunction(finders):
